@@ -5,11 +5,14 @@ import logging
 import aiogram
 from aiogram import Bot, Dispatcher
 
-bot = Bot(token="")
+from app.handlers import router
+
+from config import TOKEN
+
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 async def main():
-    await async_main()
     dp.include_router(router)
     await dp.start_polling(bot)
 
