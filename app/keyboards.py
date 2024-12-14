@@ -6,11 +6,11 @@ start_kb = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Корзина 🎰'), KeyboardButton(text='О нас 📵')]
 ], resize_keyboard=True, one_time_keyboard=True)
 
-add_to_cart = InlineKeyboardMarkup(keyboard=[
+add_to_cart = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Добавить в корзину 💰', callback_data='add_to_cart')]
 ])
 
-cart_inl = InlineKeyboardMarkup(keyboard=[
+cart_inl = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='➕', callback_data='plusOne'),
      InlineKeyboardButton(text='🗑️', callback_data='clear'),
      InlineKeyboardButton(text='➖', callback_data='minusOne')]
