@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 start_kb = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Каталог 🛒')],
-    [KeyboardButton(text='Корзина 🎰'), KeyboardButton(text='О нас 📵')]
+    [KeyboardButton(text='Корзина 🎰'), KeyboardButton(text='О нас 📞')]
 ], resize_keyboard=True, one_time_keyboard=True)
 
 add_to_cart = InlineKeyboardMarkup(inline_keyboard=[
