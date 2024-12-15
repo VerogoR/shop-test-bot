@@ -31,6 +31,21 @@ with sqlite3.connect(PATH) as db:
         phone TEXT NOT NULL
         )
         ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Catalog (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_name TEXT NOT NULL,
+        item_photo TEXT NOT NULL,
+        item_price INTEGER NOT NULL,
+        category TEXT NOT NULL
+        )
+        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Category (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cat_name TEXT NOT NULL
+        )
+        ''')
     db.commit()
 
 def registration(id, first_name, username):
@@ -43,3 +58,28 @@ def registration(id, first_name, username):
             query = f'''INSERT INTO Users(tg_id, first_name, username, money, if_admin) VALUES (?,?,?,?,?)'''
             cursor.execute(query, data)
         db.commit()
+
+def show_catalog(category):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        cursor.execute('''SELECT * FROM Catalog WHERE category = ?''', (category))
+        items = cursor.fetchall()
+        return items;
+
+def add_item(name, photo, price, category):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        try:
+            cursor.execute('BEGIN')
+            cursor.execute('INSERT INTO Catalog (item_name, item_photo, item_price, category) VALUES (?, ?, ?, ?)',
+                           (f'{name}', f'{photo}', f'{price}', f'{category}'))
+            cursor.execute('COMMIT')
+        except:
+            cursor.execute('ROLLBACK')
+
+def if_admin(user_id):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        cursor.execute('''SELECT if_admin FROM Users WHERE tg_id = ?''', (user_id,))
+        res = cursor.fetchall()
+        return res;

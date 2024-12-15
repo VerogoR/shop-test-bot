@@ -20,3 +20,10 @@ cart_repl = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='Очистить корзину 🥶')],
     [KeyboardButton(text='Оформить заказ 😈')]
 ], resize_keyboard=True, one_time_keyboard=True)
+
+admin_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Добавить айтем', callback_data='add_item')],
+    [InlineKeyboardButton(text='Показать все айтемы', callback_data='show_items')],
+    [InlineKeyboardButton(text='Показать заказы', callback_data='show_orders')],
+    [InlineKeyboardButton(text='Добавить админа', callback_data='make_admin')]
+], resize_keyboard=True)
