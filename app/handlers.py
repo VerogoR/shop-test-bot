@@ -121,7 +121,8 @@ async def show_items_by_cat_final(message: Message, state: FSMContext):
         await state.clear()
         data = show_catalog(message.text)
         if data:
-            await message.answer_photo(photo=f'{data[0][2]}', caption = f"{data[0][1]}\n{data[0][3]} BYN", reply_markup=add_to_cart)
+            for item in data:
+                await message.answer_photo(photo=f'{item[2]}', caption = f"{item[1]}\n{item[3]} BYN", reply_markup=add_to_cart)
         else:
             await message.answer('В выбранной категории товаров нет')
     else:
@@ -143,7 +144,7 @@ async def show_cart(message: Message):
         for item in cart:
             item_info = get_item_db(item[2])
             sum += (item_info[0][3] * item[4])
-            await message.answer_photo(photo=item_info[0][2], caption = f"{item_info[0][1]}\n{item_info[0][3]} BYN\n{item[4]} шт.", reply_markup=cart_inl)
+            await message.answer_photo(photo=item_info[0][2], caption = f"{item_info[0][1]}\n{item_info[0][3]} BYN\n{item[4]} шт.")#, reply_markup=cart_inl)
         await message.answer(f"Сумма: {sum} BYN", reply_markup=cart_repl)
 
 @router.message(F.text == 'Очистить корзину 🥶')
