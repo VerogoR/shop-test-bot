@@ -1,3 +1,4 @@
+from ftplib import all_errors
 from pyexpat.errors import messages
 
 import aiogram
@@ -7,12 +8,13 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb, cart_inl, cart_repl
+from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb, cart_inl, cart_repl, get_phone
 from app.keyboards import categories
-from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db, show_cart_db, get_item_db, clear_cart_db
+from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db, show_cart_db, get_item_db, clear_cart_db, get_check
 from config import CHAT_ID
 
 router = Router()
+from main import bot
 
 class myStates(StatesGroup):
     category = State()
@@ -148,3 +150,28 @@ async def show_cart(message: Message):
 async def clear_cart(message: Message):
     clear_cart_db(message.from_user.id)
     await message.answer("Корзина очищена")
+
+@router.message(F.text == 'Оформить заказ 😈')
+async def make_order(message: Message, state: FSMContext):
+    await state.set_state(toOrder.phone)
+    await message.answer('Укажите свой номер телефона', reply_markup=get_phone)
+
+@router.message(toOrder.phone)
+async def make_order2(message: Message, state: FSMContext):
+    await state.update_data(name=message.contact.first_name)
+    await state.update_data(phone=message.contact.phone_number)
+    await state.set_state(toOrder.email)
+    await message.answer('Введите почту.\nБудьте внимательны. На почту придет код')
+
+@router.message(toOrder.email)
+async def make_order_final(message: Message, state: FSMContext):
+    await state.update_data(email=message.text)
+    data = await state.get_data()
+    # await message.answer(f"{data}")
+    await state.clear()
+    check = get_check(message.from_user.id)
+    await message.answer('Спасибо за заказ!\nОжидайте свой код на почте в течение 24 лет')
+    await message.answer(check)
+    await bot.send_message(chat_id=CHAT_ID, text=f'Новый заказ\n{check}\n{data['name']}\n{data['phone']}\n{data['email']}')
+    data = await state.get_data()
+    clear_cart_db(message.from_user.id)

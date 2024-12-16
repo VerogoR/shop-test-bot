@@ -133,3 +133,18 @@ def clear_cart_db(user_id):
         cursor = db.cursor()
         cursor.execute('''DELETE FROM Cart WHERE user_id = ?''', (user_id,))
         db.commit()
+
+
+def get_check(user_id):
+    cart = show_cart_db(user_id)
+    result = 'Ваш заказ:\n'
+    sum = 0
+    for item in cart:
+        item_info = get_item_db(item[2])
+        sum += (item_info[0][3] * item[4])
+        name = f"{item_info[0][1]}"
+        price = f"{item_info[0][3]} BYN"
+        num = f"{item[4]} шт."
+        result += name + "\n" + price + "\n" + num + "\n"
+    result += f"Сумма: {sum} BYN"
+    return result
