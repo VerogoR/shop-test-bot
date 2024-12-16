@@ -1,3 +1,5 @@
+from pyexpat.errors import messages
+
 import aiogram
 from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
@@ -5,11 +7,22 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from app.keyboards import start_kb, admin_kb
+from app.keyboards import start_kb, admin_kb, category_kb
+from app.keyboards import categories
 from database.database import registration, show_catalog, add_item, if_admin
 from config import CHAT_ID
 
 router = Router()
+
+class myStates(StatesGroup):
+    category = State()
+    name = State()
+    price = State()
+    photo = State()
+
+class toOrder(StatesGroup):
+    email = State()
+    phone = State()
 
 @router.message(CommandStart())
 async def start(message: Message):
@@ -51,3 +64,44 @@ async def admin(message: Message):
         await message.answer('Активирована админ панель.\nВыберите действие', reply_markup=admin_kb)
     else:
         await message.answer("Доступ запрещен")
+
+@router.callback_query(F.data == 'add_item')
+async def add_item1(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(myStates.category)
+    await callback.message.answer("Укажите категорию товара", reply_markup=await category_kb())
+
+@router.message(myStates.category)
+async def add_item2(message: Message, state: FSMContext):
+    if message.text in categories:
+        await state.update_data(item_category=message.text)
+        await state.set_state(myStates.name)
+        await message.answer('Отлично. Теперь укажите название товара')
+    else:
+        await message.answer('Неверно указанная категория. Выберите категорию из списка ниже', reply_markup=await category_kb())
+
+@router.message(myStates.name)
+async def add_item3(message: Message, state: FSMContext):
+    await state.update_data(item_name=message.text)
+    await state.set_state(myStates.photo)
+    await message.answer('Отлично. Теперь отправьте фото товара (картинку или ссылку)')
+
+@router.message(myStates.photo)
+async def add_item4(message: Message, state: FSMContext):
+    if message.text:
+        await state.update_data(item_photo=message.text)
+    else:
+        await state.update_data(item_photo=message.photo[-1].file_id)
+    await state.set_state(myStates.price)
+    await message.answer('Отлично. Теперь укажите стоимость товара (целое число в BYN)')
+
+@router.message(myStates.price)
+async def add_item5(message: Message, state: FSMContext):
+    await state.update_data(item_price=message.text)
+    data = await state.get_data()
+    await message.answer('Все данные получены. Загрузка в базу')
+    add_item(name=data['item_name'], price=data['item_price'], photo=data['item_photo'], category=data['item_category'])
+    await state.clear()
+
+# @router.callback_query(F.data == 'show_items')
+# async def show_items(callback: CallbackQuery, state: FSMContext):
+#     await callback.message.edit_text('Выберите тип вывода',)

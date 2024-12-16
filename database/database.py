@@ -59,12 +59,15 @@ def registration(id, first_name, username):
             cursor.execute(query, data)
         db.commit()
 
-def show_catalog(category):
+def show_catalog(*category):
     with sqlite3.connect(PATH) as db:
         cursor = db.cursor()
-        cursor.execute('''SELECT * FROM Catalog WHERE category = ?''', (category))
+        if len(category) == 1:
+            cursor.execute('''SELECT * FROM Catalog WHERE category = ?''', (category,))
+        else:
+            cursor.execute('''SELECT * FROM Catalog''')
         items = cursor.fetchall()
-        return items;
+        return items
 
 def add_item(name, photo, price, category):
     with sqlite3.connect(PATH) as db:
@@ -72,7 +75,7 @@ def add_item(name, photo, price, category):
         try:
             cursor.execute('BEGIN')
             cursor.execute('INSERT INTO Catalog (item_name, item_photo, item_price, category) VALUES (?, ?, ?, ?)',
-                           (f'{name}', f'{photo}', f'{price}', f'{category}'))
+                           (f'{name}', f'{photo}', int(f'{price}'), f'{category}'))
             cursor.execute('COMMIT')
         except:
             cursor.execute('ROLLBACK')

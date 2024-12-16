@@ -27,3 +27,11 @@ admin_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Показать заказы', callback_data='show_orders')],
     [InlineKeyboardButton(text='Добавить админа', callback_data='make_admin')]
 ], resize_keyboard=True)
+
+
+categories = ['Genshin Impact', 'Brawl Stars', 'Roblox', 'Minecraft', 'Valorant', 'Fortnite']
+async def category_kb():
+    keyboard = ReplyKeyboardBuilder()
+    for cat in categories:
+        keyboard.add(KeyboardButton(text=cat))
+    return keyboard.adjust(2).as_markup(one_time_keyboard=True)
