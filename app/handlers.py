@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb, cart_inl, cart_repl
 from app.keyboards import categories
-from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db, show_cart_db, get_item_db
+from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db, show_cart_db, get_item_db, clear_cart_db
 from config import CHAT_ID
 
 router = Router()
@@ -135,8 +135,16 @@ async def add_item_to_cart(callback: CallbackQuery):
 async def show_cart(message: Message):
     cart = show_cart_db(message.from_user.id)
     sum = 0
-    for item in cart:
-        item_info = get_item_db(item[2])
-        sum += (item_info[0][3] * item[4])
-        await message.answer_photo(photo=item_info[0][2], caption = f"{item_info[0][1]}\n{item_info[0][3]} BYN\n{item[4]} шт.", reply_markup=cart_inl)
-    await message.answer(f"Сумма: {sum} BYN", reply_markup=cart_repl)
+    if len(cart) == 0:
+        await message.answer('Корзина пуста')
+    else:
+        for item in cart:
+            item_info = get_item_db(item[2])
+            sum += (item_info[0][3] * item[4])
+            await message.answer_photo(photo=item_info[0][2], caption = f"{item_info[0][1]}\n{item_info[0][3]} BYN\n{item[4]} шт.", reply_markup=cart_inl)
+        await message.answer(f"Сумма: {sum} BYN", reply_markup=cart_repl)
+
+@router.message(F.text == 'Очистить корзину 🥶')
+async def clear_cart(message: Message):
+    clear_cart_db(message.from_user.id)
+    await message.answer("Корзина очищена")

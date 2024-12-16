@@ -99,13 +99,16 @@ def add_to_cart_db(user_id, item_name, item_price):
         item_id = res[0][0]
         cursor.execute('''SELECT * FROM Cart WHERE item = ?''', (str(item_id),))
         res2 = cursor.fetchall()
-        num_of_item = res2[0][4]
-        if num_of_item:
+        if res2:
+            num_of_item = res2[0][4]
+        else:
+            num_of_item = 0
+        if num_of_item != 0:
             cursor.execute('''UPDATE Cart SET num = ? WHERE item = ?''', (num_of_item + 1, item_id))
             # cursor.execute('''INSERT INTO Cart (user_id, item, cost, num) VALUES (?, ?, ?)''',
             #                (user_id, item_id, item_price, num_of_item + 1))
         else:
-            cursor.execute('''INSERT INTO Cart (user_id, item, cost, num) VALUES (?, ?, ?)''',
+            cursor.execute('''INSERT INTO Cart (user_id, item, cost, num) VALUES (?, ?, ?, ?)''',
                            (user_id, item_id, item_price, 1))
         db.commit()
 
@@ -124,3 +127,9 @@ def get_item_db(item_id):
         res = cursor.fetchall()
         db.commit()
         return res
+
+def clear_cart_db(user_id):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        cursor.execute('''DELETE FROM Cart WHERE user_id = ?''', (user_id,))
+        db.commit()
