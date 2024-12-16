@@ -18,7 +18,8 @@ with sqlite3.connect(PATH) as db:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         item TEXT NOT NULL,
-        cost INTEGER
+        cost INTEGER,
+        num INTEGER
         )
         ''')
     cursor.execute('''
@@ -96,5 +97,30 @@ def add_to_cart_db(user_id, item_name, item_price):
         cursor.execute('''SELECT * FROM Catalog WHERE item_name = ?''', (str(item_name),))
         res = cursor.fetchall()
         item_id = res[0][0]
-        cursor.execute('''INSERT INTO Cart (user_id, item, cost) VALUES (?, ?, ?)''', (user_id, item_id, item_price))
+        cursor.execute('''SELECT * FROM Cart WHERE item = ?''', (str(item_id),))
+        res2 = cursor.fetchall()
+        num_of_item = res2[0][4]
+        if num_of_item:
+            cursor.execute('''UPDATE Cart SET num = ? WHERE item = ?''', (num_of_item + 1, item_id))
+            # cursor.execute('''INSERT INTO Cart (user_id, item, cost, num) VALUES (?, ?, ?)''',
+            #                (user_id, item_id, item_price, num_of_item + 1))
+        else:
+            cursor.execute('''INSERT INTO Cart (user_id, item, cost, num) VALUES (?, ?, ?)''',
+                           (user_id, item_id, item_price, 1))
         db.commit()
+
+def show_cart_db(user_id):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        cursor.execute('''SELECT * FROM Cart WHERE user_id = ?''', (user_id,))
+        res = cursor.fetchall()
+        db.commit()
+        return res
+
+def get_item_db(item_id):
+    with sqlite3.connect(PATH) as db:
+        cursor = db.cursor()
+        cursor.execute('''SELECT * FROM Catalog WHERE id = ?''', (item_id,))
+        res = cursor.fetchall()
+        db.commit()
+        return res

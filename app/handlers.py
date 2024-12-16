@@ -7,9 +7,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb
+from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb, cart_inl, cart_repl
 from app.keyboards import categories
-from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db
+from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db, show_cart_db, get_item_db
 from config import CHAT_ID
 
 router = Router()
@@ -131,5 +131,12 @@ async def add_item_to_cart(callback: CallbackQuery):
     add_to_cart_db(callback.from_user.id, item_data[0], item_data[1])
     await callback.message.answer("Товар добавлен в корзину", reply_markup=to_cart_kb)
 
-# @router.message(F.text == 'Корзина 🛒')
-# async def show_cart
+@router.message(F.text == 'Корзина 🛒')
+async def show_cart(message: Message):
+    cart = show_cart_db(message.from_user.id)
+    sum = 0
+    for item in cart:
+        item_info = get_item_db(item[2])
+        sum += (item_info[0][3] * item[4])
+        await message.answer_photo(photo=item_info[0][2], caption = f"{item_info[0][1]}\n{item_info[0][3]} BYN\n{item[4]} шт.", reply_markup=cart_inl)
+    await message.answer(f"Сумма: {sum} BYN", reply_markup=cart_repl)
