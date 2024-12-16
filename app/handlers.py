@@ -7,9 +7,9 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from app.keyboards import start_kb, admin_kb, category_kb
+from app.keyboards import start_kb, admin_kb, category_kb, add_to_cart, to_cart_kb
 from app.keyboards import categories
-from database.database import registration, show_catalog, add_item, if_admin
+from database.database import registration, show_catalog, add_item, if_admin, add_to_cart_db
 from config import CHAT_ID
 
 router = Router()
@@ -23,6 +23,7 @@ class myStates(StatesGroup):
 class toOrder(StatesGroup):
     email = State()
     phone = State()
+    category = State()
 
 @router.message(CommandStart())
 async def start(message: Message):
@@ -42,7 +43,7 @@ async def cart(message: Message):
     await message.answer("Здесь будет корзина\n(Как только я доделая БДшки)")
 
 @router.message(F.text == "О нас 📞")
-async def aboutUs(message: Message):
+async def about_us(message: Message):
     await message.answer("Цифровая Пещера — это ваш надежный источник виртуальной валюты "
                          "для всех популярных игр!\nНаша цель — предоставить вам быстрый"
                          " и удобный способ увеличить свой игровой баланс без "
@@ -102,6 +103,33 @@ async def add_item5(message: Message, state: FSMContext):
     add_item(name=data['item_name'], price=data['item_price'], photo=data['item_photo'], category=data['item_category'])
     await state.clear()
 
-# @router.callback_query(F.data == 'show_items')
-# async def show_items(callback: CallbackQuery, state: FSMContext):
-#     await callback.message.edit_text('Выберите тип вывода',)
+@router.callback_query(F.data == 'show_items')
+async def show_all_items(callback: CallbackQuery):
+    data = show_catalog()
+    await callback.message.answer_photo(photo=f'{data[0][2]}', caption = f"{data[0][1]}\n{data[0][3]}")
+
+@router.message(F.text == 'Каталог 🛍️')
+async def show_items_by_cat(message: Message, state: FSMContext):
+    await state.set_state(toOrder.category)
+    await message.answer('Выберите категорию', reply_markup=await category_kb())
+
+@router.message(toOrder.category)
+async def show_items_by_cat_final(message: Message, state: FSMContext):
+    if message.text in categories:
+        await state.clear()
+        data = show_catalog(message.text)
+        if data:
+            await message.answer_photo(photo=f'{data[0][2]}', caption = f"{data[0][1]}\n{data[0][3]} BYN", reply_markup=add_to_cart)
+        else:
+            await message.answer('В выбранной категории товаров нет')
+    else:
+        await message.answer('Неверно указанная категория. Выберите категорию из списка ниже', reply_markup=await category_kb())
+
+@router.callback_query(F.data == 'add_to_cart')
+async def add_item_to_cart(callback: CallbackQuery):
+    item_data = callback.message.caption.split("\n")
+    add_to_cart_db(callback.from_user.id, item_data[0], item_data[1])
+    await callback.message.answer("Товар добавлен в корзину", reply_markup=to_cart_kb)
+
+# @router.message(F.text == 'Корзина 🛒')
+# async def show_cart
